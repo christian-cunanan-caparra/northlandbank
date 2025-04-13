@@ -1,6 +1,4 @@
 import 'package:flutter/cupertino.dart';
-//import 'package:http/http.dart' as http;
-//import 'dart:convert';
 import '../models/user.dart';
 import 'balance_screen.dart';
 import 'transfer_screen.dart';
@@ -17,124 +15,296 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('ATM Dashboard'),
+      backgroundColor: CupertinoColors.systemGrey6,
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('BPI Mobile Banking'),
+        backgroundColor: CupertinoColors.systemRed,
+        brightness: Brightness.dark,
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            children: [
-              _buildMenuButton(
-                context,
-                'Check Balance',
-                CupertinoIcons.money_dollar,
-                    () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => BalanceScreen(user: user),
-                    ),
-                  );
-                },
+        child: CustomScrollView(
+          slivers: [
+            // Account Summary Card
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemRed,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Account Summary',
+                        style: TextStyle(
+                          color: CupertinoColors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Current Balance',
+                                style: TextStyle(
+                                  color: CupertinoColors.extraLightBackgroundGray,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(
+                                '₱${user.currentBalance.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: CupertinoColors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Savings Balance',
+                                style: TextStyle(
+                                  color: CupertinoColors.extraLightBackgroundGray,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(
+                                '₱${user.savingsBalance.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: CupertinoColors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              _buildMenuButton(
-                context,
-                'Transfer',
-                CupertinoIcons.arrow_right_arrow_left,
-                    () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => TransferScreen(user: user),
-                    ),
-                  );
-                },
+            ),
+
+            // Quick Actions
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.9,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildQuickActionButton(context, index),
+                  childCount: 4,
+                ),
               ),
-              _buildMenuButton(
-                context,
-                'Deposit',
-                CupertinoIcons.plus,
-                    () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => DepositScreen(user: user),
-                    ),
-                  );
-                },
+            ),
+
+            // Services Section
+            const SliverPadding(
+              padding: EdgeInsets.only(left: 16, top: 24, bottom: 8),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  'Services',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
               ),
-              _buildMenuButton(
-                context,
-                'Withdraw',
-                CupertinoIcons.minus,
-                    () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => WithdrawScreen(user: user),
-                    ),
-                  );
-                },
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.5,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildServiceButton(context, index),
+                  childCount: 4,
+                ),
               ),
-              _buildMenuButton(
-                context,
-                'Transactions',
-                CupertinoIcons.list_bullet,
-                    () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => TransactionsScreen(user: user),
-                    ),
-                  );
-                },
-              ),
-              _buildMenuButton(
-                context,
-                'Change PIN',
-                CupertinoIcons.lock,
-                    () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => ChangePinScreen(user: user),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuButton(
-      BuildContext context,
-      String title,
-      IconData icon,
-      VoidCallback onPressed,
-      ) {
+  Widget _buildQuickActionButton(BuildContext context, int index) {
+    final List<Map<String, dynamic>> quickActions = [
+      {
+        'icon': CupertinoIcons.arrow_right_arrow_left,
+        'label': 'Transfer',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => TransferScreen(user: user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.plus,
+        'label': 'Deposit',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => DepositScreen(user: user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.minus,
+        'label': 'Withdraw',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => WithdrawScreen(user: user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.creditcard,
+        'label': 'Pay Bills',
+        'action': () => _showComingSoon(context),
+      },
+    ];
+
     return CupertinoButton(
       padding: EdgeInsets.zero,
-      onPressed: onPressed,
+      onPressed: quickActions[index]['action'],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemRed.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Icon(
+              quickActions[index]['icon'],
+              color: CupertinoColors.systemRed,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            quickActions[index]['label'],
+            style: const TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceButton(BuildContext context, int index) {
+    final List<Map<String, dynamic>> services = [
+      {
+        'icon': CupertinoIcons.money_dollar,
+        'label': 'Account Balance',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => BalanceScreen(user: user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.list_bullet,
+        'label': 'Transactions',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => TransactionsScreen(user: user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.lock,
+        'label': 'Change PIN',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => ChangePinScreen(user: user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.settings,
+        'label': 'Settings',
+        'action': () => _showComingSoon(context),
+      },
+    ];
+
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: services[index]['action'],
       child: Container(
         decoration: BoxDecoration(
-          color: CupertinoColors.systemGrey6,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40),
-            const SizedBox(height: 8),
-            Text(title),
-          ],
-        ),
+            color: CupertinoColors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+        BoxShadow(
+        color: CupertinoColors.systemGrey.withOpacity(0.2),
+        blurRadius: 4,
+        offset: const Offset(0, 2),
+        )],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            services[index]['icon'],
+            color: CupertinoColors.systemRed,
+            size: 32,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            services[index]['label'],
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    ),
+    );
+  }
+
+  void _showComingSoon(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Coming Soon'),
+        content: const Text('This feature will be available soon.'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
       ),
     );
   }
