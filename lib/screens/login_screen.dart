@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-//import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/user.dart';
@@ -16,6 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _cardNumberController = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePin = true;
 
   Future<void> _login() async {
     setState(() {
@@ -84,47 +84,86 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('ATM Login'),
-      ),
+      backgroundColor: CupertinoColors.white,
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CupertinoTextField(
-                controller: _cardNumberController,
-                placeholder: 'Card Number',
-                keyboardType: TextInputType.number,
-                maxLength: 16,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: CupertinoColors.systemGrey),
-                  borderRadius: BorderRadius.circular(8),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 60),
+
+                // BPI Logo Placeholder
+                Image.asset(
+                  'images/bpi.png', // Replace with your actual logo asset
+                  height: 120,
                 ),
-              ),
-              const SizedBox(height: 16),
-              CupertinoTextField(
-                controller: _pinController,
-                placeholder: 'PIN',
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                obscureText: true,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: CupertinoColors.systemGrey),
-                  borderRadius: BorderRadius.circular(8),
+
+                const SizedBox(height: 60),
+
+                // Card Number (Username) Field
+                CupertinoTextField(
+                  controller: _cardNumberController,
+                  placeholder: 'Card Number',
+                  placeholderStyle: const TextStyle(color: CupertinoColors.systemRed),
+                  keyboardType: TextInputType.number,
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: CupertinoColors.systemRed, width: 2),
+                    ),
+                  ),
+                  style: const TextStyle(color: CupertinoColors.black),
                 ),
-              ),
-              const SizedBox(height: 32),
-              CupertinoButton.filled(
-                child: _isLoading
-                    ? const CupertinoActivityIndicator()
-                    : const Text('Login'),
-                onPressed: _isLoading ? null : _login,
-              ),
-            ],
+
+                const SizedBox(height: 30),
+
+                // PIN Field
+                CupertinoTextField(
+                  controller: _pinController,
+                  placeholder: 'PIN',
+                  obscureText: _obscurePin,
+                  keyboardType: TextInputType.number,
+                  placeholderStyle: const TextStyle(color: CupertinoColors.systemRed),
+                  suffix: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Icon(
+                      _obscurePin ? CupertinoIcons.eye : CupertinoIcons.eye_slash,
+                      color: CupertinoColors.systemGrey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePin = !_obscurePin;
+                      });
+                    },
+                  ),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: CupertinoColors.systemRed, width: 2),
+                    ),
+                  ),
+                  style: const TextStyle(color: CupertinoColors.black),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  child: CupertinoButton(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    color: CupertinoColors.systemRed,
+                    borderRadius: BorderRadius.circular(40),
+                    child: _isLoading
+                        ? const CupertinoActivityIndicator(color: CupertinoColors.white)
+                        : const Text(
+                      'Login',
+                      style: TextStyle(color: CupertinoColors.white),
+                    ),
+                    onPressed: _isLoading ? null : _login,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
