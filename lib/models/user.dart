@@ -22,4 +22,21 @@ class User {
       savingsBalance: double.parse(json['savings_balance'].toString()),
     );
   }
+
+  // ✅ Add this:
+  User copyWith({
+    int? id,
+    String? cardNumber,
+    String? pin,
+    double? currentBalance,
+    double? savingsBalance,
+  }) {
+    return User(
+      id: id ?? this.id,
+      cardNumber: cardNumber ?? this.cardNumber,
+      pin: pin ?? this.pin,
+      currentBalance: currentBalance ?? this.currentBalance,
+      savingsBalance: savingsBalance ?? this.savingsBalance,
+    );
+  }
 }

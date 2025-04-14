@@ -44,7 +44,7 @@ class _TransferScreenState extends State<TransferScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://warehousemanagementsystem.shop/api/transfer.php'),
+        Uri.parse('https://warehousemanagementsystem.shop/api/transfer.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'from_card': widget.user.cardNumber,

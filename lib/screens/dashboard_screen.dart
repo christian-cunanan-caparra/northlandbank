@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import 'balance_screen.dart';
 import 'transfer_screen.dart';
@@ -7,10 +9,46 @@ import 'withdraw_screen.dart';
 import 'transactions_screen.dart';
 import 'change_pin_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   final User user;
 
   const DashboardScreen({super.key, required this.user});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late User _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _user = widget.user;
+    _fetchBalance();
+  }
+
+  Future<void> _fetchBalance() async {
+    try {
+      final response = await http.get(Uri.parse(
+        'https://warehousemanagementsystem.shop/api/get_balance.php?card_number=${_user.cardNumber}',
+      ));
+      final data = jsonDecode(response.body);
+
+      if (data['success']) {
+        setState(() {
+          _user = _user.copyWith(
+            currentBalance: double.parse(data['balance']['current_balance'].toString()),
+            savingsBalance: double.parse(data['balance']['savings_balance'].toString()),
+          );
+        });
+      } else {
+        print('API responded but failed: ${data['message']}');
+      }
+    } catch (e) {
+      print('Failed to fetch balance: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +62,6 @@ class DashboardScreen extends StatelessWidget {
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // Account Summary Card
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -60,7 +97,7 @@ class DashboardScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '₱${user.currentBalance.toStringAsFixed(2)}',
+                                '₱${_user.currentBalance.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   color: CupertinoColors.white,
                                   fontSize: 24,
@@ -80,7 +117,7 @@ class DashboardScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '₱${user.savingsBalance.toStringAsFixed(2)}',
+                                '₱${_user.savingsBalance.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   color: CupertinoColors.white,
                                   fontSize: 24,
@@ -97,7 +134,6 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
 
-            // Quick Actions
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               sliver: SliverGrid(
@@ -114,7 +150,6 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
 
-            // Services Section
             const SliverPadding(
               padding: EdgeInsets.only(left: 16, top: 16, bottom: 8),
               sliver: SliverToBoxAdapter(
@@ -151,161 +186,169 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildQuickActionButton(BuildContext context, int index) {
     final List<Map<String, dynamic>> quickActions = [
-    {
-      'icon': CupertinoIcons.arrow_right_arrow_left,
-    'label': 'Transfer',
-    'action': () => Navigator.push(
-    context,
-    CupertinoPageRoute(
-    builder: (context) => TransferScreen(user: user),
-    ),
-    )},
-    {
-    'icon': CupertinoIcons.plus,
-    'label': 'Deposit',
-    'action': () => Navigator.push(
-    context,
-    CupertinoPageRoute(
-    builder: (context) => DepositScreen(user: user),
-    ),
-    ),
-    },
-    {
-    'icon': CupertinoIcons.minus,
-    'label': 'Withdraw',
-    'action': () => Navigator.push(
-    context,
-    CupertinoPageRoute(
-    builder: (context) => WithdrawScreen(user: user),
-    ),
-    ),
-    },
-    {
-    'icon': CupertinoIcons.creditcard,
-    'label': 'Pay Bills',
-    'action': () => _showComingSoon(context),
-    },
+      {
+        'icon': CupertinoIcons.arrow_right_arrow_left,
+        'label': 'Transfer',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => TransferScreen(user: _user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.plus,
+        'label': 'Deposit',
+        'action': () async {
+          await Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => DepositScreen(user: _user),
+            ),
+          );
+          await _fetchBalance();
+        },
+      },
+      {
+        'icon': CupertinoIcons.minus,
+        'label': 'Withdraw',
+        'action': () async {
+          await Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => WithdrawScreen(user: _user),
+            ),
+          );
+          await _fetchBalance();
+        },
+      },
+      {
+        'icon': CupertinoIcons.creditcard,
+        'label': 'Pay Bills',
+        'action': () => _showComingSoon(context),
+      },
     ];
 
     return CupertinoButton(
-    padding: EdgeInsets.zero,
-    onPressed: quickActions[index]['action'],
-    child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    Container(
-    width: 50,
-    height: 50,
-    decoration: BoxDecoration(
-    color: CupertinoColors.systemRed.withOpacity(0.2),
-    borderRadius: BorderRadius.circular(25),
-    ),
-    child: Icon(
-    quickActions[index]['icon'],
-    color: CupertinoColors.systemRed,
-    size: 24,
-    ),
-    ),
-    const SizedBox(height: 8),
-    Text(
-    quickActions[index]['label'],
-    style: const TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    ),
-    textAlign: TextAlign.center,
-    ),
-    ],
-    ),
+      padding: EdgeInsets.zero,
+      onPressed: quickActions[index]['action'],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemRed.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Icon(
+              quickActions[index]['icon'],
+              color: CupertinoColors.systemRed,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            quickActions[index]['label'],
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildServiceButton(BuildContext context, int index) {
     final List<Map<String, dynamic>> services = [
-    {
-      'icon': CupertinoIcons.money_dollar,
-    'label': 'Account Balance',
-    'action': () => Navigator.push(
-    context,
-    CupertinoPageRoute(
-    builder: (context) => BalanceScreen(user: user),
-    ),
-    )},
-    {
-    'icon': CupertinoIcons.list_bullet,
-    'label': 'Transactions',
-    'action': () => Navigator.push(
-    context,
-    CupertinoPageRoute(
-    builder: (context) => TransactionsScreen(user: user),
-    ),
-    ),
-    },
-    {
-    'icon': CupertinoIcons.lock,
-    'label': 'Change PIN',
-    'action': () => Navigator.push(
-    context,
-    CupertinoPageRoute(
-    builder: (context) => ChangePinScreen(user: user),
-    ),
-    ),
-    },
-    {
-    'icon': CupertinoIcons.settings,
-    'label': 'Settings',
-    'action': () => _showComingSoon(context),
-    },
+      {
+        'icon': CupertinoIcons.money_dollar,
+        'label': 'Account Balance',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => BalanceScreen(user: _user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.list_bullet,
+        'label': 'Transactions',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => TransactionsScreen(user: _user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.lock,
+        'label': 'Change PIN',
+        'action': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => ChangePinScreen(user: _user),
+          ),
+        ),
+      },
+      {
+        'icon': CupertinoIcons.settings,
+        'label': 'Settings',
+        'action': () => _showComingSoon(context),
+      },
     ];
 
     return Container(
-    decoration: BoxDecoration(
-    color: CupertinoColors.white,
-    borderRadius: BorderRadius.circular(12),
-    boxShadow: [
-    BoxShadow(
-    color: CupertinoColors.systemGrey.withOpacity(0.2),
-    blurRadius: 4,
-    offset: const Offset(0, 2),
-    ),
-    ],
-    ),
-    child: CupertinoButton(
-    padding: EdgeInsets.zero,
-    borderRadius: BorderRadius.circular(12),
-    onPressed: services[index]['action'],
-    child: Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    Container(
-    width: 48,
-    height: 48,
-    decoration: BoxDecoration(
-    color: CupertinoColors.systemRed.withOpacity(0.1),
-    borderRadius: BorderRadius.circular(24),
-    ),
-    child: Icon(
-    services[index]['icon'],
-    color: CupertinoColors.systemRed,
-    size: 28,
-    ),
-    ),
-    const SizedBox(height: 12),
-    Text(
-    services[index]['label'],
-    style: const TextStyle(
-    fontSize: 10,
-    fontWeight: FontWeight.w500,
-    color: CupertinoColors.darkBackgroundGray,
-    ),
-    textAlign: TextAlign.center,
-    ),
-    ],
-    ),
-    ),
-    ),
+      decoration: BoxDecoration(
+        color: CupertinoColors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.systemGrey.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        borderRadius: BorderRadius.circular(12),
+        onPressed: services[index]['action'],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemRed.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Icon(
+                  services[index]['icon'],
+                  color: CupertinoColors.systemRed,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                services[index]['label'],
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: CupertinoColors.darkBackgroundGray,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
