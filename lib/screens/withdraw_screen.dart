@@ -34,7 +34,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.25/api/withdraw.php'),
+        Uri.parse('http://warehousemanagementsystem.shop/api/withdraw.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'card_number': widget.user.cardNumber,

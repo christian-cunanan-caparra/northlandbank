@@ -19,27 +19,39 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   bool _hasError = false;
 
   Future<void> _fetchTransactions() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.25/api/transactions.php?card_number=${widget.user.cardNumber}'),
+        Uri.parse('https://warehousemanagementsystem.shop/api/transactions.php?card_number=${widget.user.cardNumber}'),
       );
 
-      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-      if (data['success']) {
-        setState(() {
-          _transactions = (data['transactions'] as List)
-              .map((item) => Transaction.fromJson(item))
-              .toList();
-          _isLoading = false;
-          _hasError = false;
-        });
+        if (data['success'] == true) {
+          setState(() {
+            _transactions = (data['transactions'] as List)
+                .map((item) => Transaction.fromJson(item))
+                .toList();
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _hasError = true;
+            _isLoading = false;
+          });
+          _showAlert('Error', data['message'] ?? 'Failed to load transactions');
+        }
       } else {
         setState(() {
           _hasError = true;
           _isLoading = false;
         });
-        _showAlert('Error', data['message'] ?? 'Failed to load transactions');
+        _showAlert('Error', 'Server error: ${response.statusCode}');
       }
     } catch (e) {
       setState(() {
@@ -116,7 +128,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(CupertinoIcons.exclamationmark_circle, size: 48, color: CupertinoColors.systemRed),
+          const Icon(
+            CupertinoIcons.exclamationmark_circle,
+            size: 48,
+            color: CupertinoColors.systemRed,
+          ),
           const SizedBox(height: 16),
           const Text(
             'Failed to load transactions',
@@ -137,7 +153,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(CupertinoIcons.doc_plaintext, size: 48, color: CupertinoColors.systemGrey),
+          const Icon(
+            CupertinoIcons.doc_plaintext,
+            size: 48,
+            color: CupertinoColors.systemGrey,
+          ),
           const SizedBox(height: 16),
           const Text(
             'No transactions found',
@@ -167,7 +187,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row: Type + Amount
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -188,8 +207,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               ],
             ),
             const SizedBox(height: 8),
-
-            // Account type and date
             Row(
               children: [
                 Container(

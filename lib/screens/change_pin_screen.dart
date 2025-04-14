@@ -61,7 +61,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.25/api/update_pin.php'),
+        Uri.parse('http://warehousemanagementsystem.shop/api/update_pin.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'card_number': widget.user.cardNumber,

@@ -34,7 +34,7 @@ class _DepositScreenState extends State<DepositScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.25/api/deposit.php'),
+        Uri.parse('http://warehousemanagementsystem.shop/api/deposit.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'card_number': widget.user.cardNumber,
