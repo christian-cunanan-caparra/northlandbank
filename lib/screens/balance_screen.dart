@@ -21,7 +21,7 @@ class _BalanceScreenState extends State<BalanceScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-            'https://warehousemanagementsystem.shop/api/get_balance.php?card_number=${widget.user.cardNumber}'), // Fixed URL
+            'http://192.168.0.25/api/get_balance.php?card_number=${widget.user.cardNumber}'),
       );
 
       if (response.statusCode == 200) {
@@ -92,8 +92,8 @@ class _BalanceScreenState extends State<BalanceScreen> {
                 ),
                 const SizedBox(height: 16),
                 CupertinoButton(
-                  onPressed: _fetchBalances,
                   child: const Text('Retry'),
+                  onPressed: _fetchBalances,
                 ),
               ],
             ),
