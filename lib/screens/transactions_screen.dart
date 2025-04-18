@@ -21,7 +21,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> _fetchTransactions() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.25/api/transactions.php?card_number=${widget.user.cardNumber}'),
+        Uri.parse('https://warehousemanagementsystem.shop/api/transactions.php?card_number=${widget.user.cardNumber}'),
       );
 
       final data = jsonDecode(response.body);
