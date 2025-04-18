@@ -115,7 +115,6 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
     final newPin = _newPinController.text.trim();
     final confirmPin = _confirmPinController.text.trim();
 
-    // Validation
     if (currentPin.isEmpty || newPin.isEmpty || confirmPin.isEmpty) {
       _showAlert('Error', 'Please fill all fields');
       return;
@@ -148,7 +147,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
 
       if (data['success'] == true) {
         _showAlert('Success', 'PIN changed successfully', onDismiss: () {
-          Navigator.pop(context, true);
+          _resetScreen();
         });
       } else {
         throw Exception(data['message'] ?? 'Failed to update PIN');
@@ -158,6 +157,20 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _resetScreen() {
+    _currentPinController.clear();
+    _newPinController.clear();
+    _confirmPinController.clear();
+    _otpController.clear();
+
+    setState(() {
+      _otpSent = false;
+      _otpVerified = false;
+      _errorMessage = null;
+      _resendTimer = 60;
+    });
   }
 
   Map<String, dynamic> _parseResponse(http.Response response) {
@@ -241,7 +254,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
                   ),
                   child: Text(
                     _errorMessage!,
-                    style: TextStyle(color: CupertinoColors.systemRed),
+                    style: const TextStyle(color: CupertinoColors.systemRed),
                   ),
                 ),
               _buildOtpSection(),
@@ -311,6 +324,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
         ],
       );
     }
+
     return const SizedBox.shrink();
   }
 
@@ -371,6 +385,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
         ],
       );
     }
+
     return const SizedBox.shrink();
   }
 }

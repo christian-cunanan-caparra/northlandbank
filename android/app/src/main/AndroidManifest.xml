@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Add other permissions if needed (like INTERNET) -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="Northland Bank"
+        android:label="BPI-Beta"
 
         android:icon="@mipmap/ic_launcher">
         <activity
