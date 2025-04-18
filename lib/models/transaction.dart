@@ -7,6 +7,7 @@ class Transaction {
   final double balance;
   final String accountType;
 
+
   Transaction({
     required this.id,
     required this.cardNumber,

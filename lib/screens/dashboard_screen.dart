@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:mybanking/screens/paybill_screen.dart';
 import '../models/user.dart';
 import '../models/transaction.dart';
 import 'balance_screen.dart';
@@ -515,7 +516,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isIncoming = transaction.type == 'Deposit' ||
         (transaction.type == 'Transfer' && transaction.amount > 0);
     final isOutgoing = transaction.type == 'Withdraw' ||
-        (transaction.type == 'Transfer' && transaction.amount < 0);
+        (transaction.type == 'Transfer' && transaction.amount < 0) ||
+        transaction.type.toLowerCase().contains('bill') ||
+        transaction.type.toLowerCase().contains('water') ||
+        transaction.type.toLowerCase().contains('electric');
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -623,7 +627,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {
         'icon': CupertinoIcons.creditcard,
         'label': 'Pay Bills',
-        'action': () => _showComingSoon(context),
+        'action': () async {
+          await Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => PayBillScreen(user: _user),
+            ),
+          );
+          await _fetchData();
+        },
       },
     ];
 
@@ -661,6 +673,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _formatTransactionType(String type) {
+    if (type.toLowerCase().contains('bill') ||
+        type.toLowerCase().contains('water') ||
+        type.toLowerCase().contains('electric')) {
+      return 'Bill Payment';
+    }
     switch (type.toLowerCase()) {
       case 'deposit':
         return 'Deposit';
@@ -670,14 +687,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return 'Fund Transfer';
       case 'payment':
         return 'Payment';
-      case 'bill':
-        return 'Bill Payment';
       default:
         return type;
     }
   }
 
   IconData _getTransactionIcon(String type) {
+    if (type.toLowerCase().contains('bill') ||
+        type.toLowerCase().contains('water') ||
+        type.toLowerCase().contains('electric')) {
+      return CupertinoIcons.creditcard;
+    }
     switch (type.toLowerCase()) {
       case 'deposit':
         return CupertinoIcons.arrow_down;
@@ -687,12 +707,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return CupertinoIcons.arrow_right_arrow_left;
       case 'payment':
         return CupertinoIcons.money_dollar;
-      case 'bill':
-        return CupertinoIcons.doc_text;
       default:
         return CupertinoIcons.doc_text;
     }
   }
+
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
