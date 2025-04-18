@@ -5,8 +5,13 @@ import '../models/user.dart';
 
 class TransferScreen extends StatefulWidget {
   final User user;
+  final Function()? onTransferSuccess;
 
-  const TransferScreen({super.key, required this.user});
+  const TransferScreen({
+    super.key,
+    required this.user,
+    this.onTransferSuccess,
+  });
 
   @override
   State<TransferScreen> createState() => _TransferScreenState();
@@ -28,6 +33,14 @@ class _TransferScreenState extends State<TransferScreen> {
 
     if (recipient.isEmpty || amount.isEmpty) {
       _showAlert('Error', 'Please fill all fields');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    if (double.tryParse(amount) == null || double.parse(amount) <= 0) {
+      _showAlert('Error', 'Please enter a valid amount');
       setState(() {
         _isLoading = false;
       });
@@ -57,14 +70,24 @@ class _TransferScreenState extends State<TransferScreen> {
       final data = jsonDecode(response.body);
 
       if (data['success']) {
-        _showAlert('Success', data['message']);
-        _recipientController.clear();
-        _amountController.clear();
+        _showAlert('Success', data['message'], onDismiss: () {
+          // Clear fields
+          _recipientController.clear();
+          _amountController.clear();
+
+          // Notify parent screen to refresh
+          if (widget.onTransferSuccess != null) {
+            widget.onTransferSuccess!();
+          }
+
+          // Close the transfer screen
+          Navigator.pop(context);
+        });
       } else {
-        _showAlert('Error', data['message']);
+        _showAlert('Error', data['message'] ?? 'Transfer failed');
       }
     } catch (e) {
-      _showAlert('Error', 'Failed to complete transfer');
+      _showAlert('Error', 'Failed to complete transfer: ${e.toString()}');
     } finally {
       setState(() {
         _isLoading = false;
@@ -72,7 +95,7 @@ class _TransferScreenState extends State<TransferScreen> {
     }
   }
 
-  void _showAlert(String title, String message) {
+  void _showAlert(String title, String message, {VoidCallback? onDismiss}) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -81,7 +104,12 @@ class _TransferScreenState extends State<TransferScreen> {
         actions: [
           CupertinoDialogAction(
             child: const Text('OK'),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              if (onDismiss != null) {
+                onDismiss();
+              }
+            },
           ),
         ],
       ),
@@ -114,7 +142,7 @@ class _TransferScreenState extends State<TransferScreen> {
               CupertinoTextField(
                 controller: _amountController,
                 placeholder: 'Amount',
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border.all(color: CupertinoColors.systemGrey),
@@ -136,10 +164,10 @@ class _TransferScreenState extends State<TransferScreen> {
               ),
               const SizedBox(height: 32),
               CupertinoButton.filled(
+                onPressed: _isLoading ? null : _transfer,
                 child: _isLoading
                     ? const CupertinoActivityIndicator()
                     : const Text('Transfer'),
-                onPressed: _isLoading ? null : _transfer,
               ),
             ],
           ),

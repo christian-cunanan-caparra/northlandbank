@@ -124,8 +124,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
           const SizedBox(height: 8),
           CupertinoButton(
-            child: const Text('Try Again'),
             onPressed: _fetchTransactions,
+            child: const Text('Try Again'),
           ),
         ],
       ),

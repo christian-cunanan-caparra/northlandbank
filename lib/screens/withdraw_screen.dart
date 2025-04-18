@@ -112,10 +112,10 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               ),
               const SizedBox(height: 32),
               CupertinoButton.filled(
+                onPressed: _isLoading ? null : _withdraw,
                 child: _isLoading
                     ? const CupertinoActivityIndicator()
                     : const Text('Withdraw'),
-                onPressed: _isLoading ? null : _withdraw,
               ),
             ],
           ),

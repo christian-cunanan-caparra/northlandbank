@@ -26,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final pin = _pinController.text.trim();
 
     if (cardNumber.isEmpty || pin.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 300));
       _showAlert('Error', 'Please enter both card number and PIN');
       setState(() {
         _isLoading = false;
@@ -35,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://warehousemanagementsystem.shop/api/login.php'), // Updated URL
+        Uri.parse('https://warehousemanagementsystem.shop/api/login.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'card_number': cardNumber,
@@ -54,9 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       } else {
+        await Future.delayed(const Duration(milliseconds: 300));
         _showAlert('Login Failed', data['message']);
       }
     } catch (e) {
+      await Future.delayed(const Duration(milliseconds: 300));
       _showAlert('Error', 'Failed to connect to server: $e');
     } finally {
       setState(() {
@@ -88,34 +91,46 @@ class _LoginScreenState extends State<LoginScreen> {
       child: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 50),
 
-                // BPI Logo Placeholder
+                // Logo
                 Image.asset(
-                  'images/bpi.png', // Replace with your actual logo asset
-                  height: 120,
+                  'images/bpi.png',
+                  height: 100,
                 ),
 
-                const SizedBox(height: 60),
+                const SizedBox(height: 20),
 
-                // Card Number (Username) Field
+                // Welcome Text
+                const Text(
+                  'Welcome to BPI',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: CupertinoColors.systemRed,
+                  ),
+                ),
+
+                const SizedBox(height: 50),
+
+                // Card Number Field
                 CupertinoTextField(
                   controller: _cardNumberController,
                   placeholder: 'Card Number',
-                  placeholderStyle: const TextStyle(color: CupertinoColors.systemRed),
                   keyboardType: TextInputType.number,
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: CupertinoColors.systemRed, width: 2),
-                    ),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemGrey6,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   style: const TextStyle(color: CupertinoColors.black),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
                 // PIN Field
                 CupertinoTextField(
@@ -123,7 +138,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   placeholder: 'PIN',
                   obscureText: _obscurePin,
                   keyboardType: TextInputType.number,
-                  placeholderStyle: const TextStyle(color: CupertinoColors.systemRed),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemGrey6,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   suffix: CupertinoButton(
                     padding: EdgeInsets.zero,
                     child: Icon(
@@ -136,11 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     },
                   ),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: CupertinoColors.systemRed, width: 2),
-                    ),
-                  ),
                   style: const TextStyle(color: CupertinoColors.black),
                 ),
 
@@ -149,18 +163,34 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Login Button
                 SizedBox(
                   width: double.infinity,
-                  child: CupertinoButton(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    color: CupertinoColors.systemRed,
-                    borderRadius: BorderRadius.circular(40),
-                    child: _isLoading
-                        ? const CupertinoActivityIndicator(color: CupertinoColors.white)
-                        : const Text(
-                      'Login',
-                      style: TextStyle(color: CupertinoColors.white),
-                    ),
+                  child: CupertinoButton.filled(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    borderRadius: BorderRadius.circular(30),
                     onPressed: _isLoading ? null : _login,
+                    child: _isLoading
+                        ? const CupertinoActivityIndicator(color: CupertinoColors.black)
+                        : const Text(
+                      'Log in',
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Optional: Forgot PIN
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: const Text(
+                    'Forgot your PIN?',
+                    style: TextStyle(
+                      color: CupertinoColors.systemRed,
+                      fontSize: 14,
+                    ),
+                  ),
+                  onPressed: () {
+                    // Handle forgot PIN
+                  },
                 ),
               ],
             ),

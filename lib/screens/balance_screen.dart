@@ -92,8 +92,8 @@ class _BalanceScreenState extends State<BalanceScreen> {
                 ),
                 const SizedBox(height: 16),
                 CupertinoButton(
-                  child: const Text('Retry'),
                   onPressed: _fetchBalances,
+                  child: const Text('Retry'),
                 ),
               ],
             ),

@@ -112,10 +112,10 @@ class _DepositScreenState extends State<DepositScreen> {
               ),
               const SizedBox(height: 32),
               CupertinoButton.filled(
+                onPressed: _isLoading ? null : _deposit,
                 child: _isLoading
                     ? const CupertinoActivityIndicator()
                     : const Text('Deposit'),
-                onPressed: _isLoading ? null : _deposit,
               ),
             ],
           ),
