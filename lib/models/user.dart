@@ -5,8 +5,9 @@ class User {
   final double currentBalance;
   final double savingsBalance;
   final String email;
+  final String name; // ✅ Add this
 
-  // Constructor to initialize a User object
+  // Constructor
   User({
     required this.id,
     required this.cardNumber,
@@ -14,21 +15,23 @@ class User {
     required this.currentBalance,
     required this.savingsBalance,
     required this.email,
+    required this.name, // ✅ Add this
   });
 
-  // Factory method to create a User object from JSON data
+  // Factory method to create a User object from JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: int.parse(json['id']?.toString() ?? '0'),  // Safely convert id to int, default to 0
-      cardNumber: json['card_number']?.toString() ?? '',  // Default empty string if missing
-      pin: json['pin']?.toString() ?? '',  // Default empty string if missing
-      currentBalance: double.tryParse(json['current_balance']?.toString() ?? '0') ?? 0.0,  // Default 0.0 if parsing fails
-      savingsBalance: double.tryParse(json['savings_balance']?.toString() ?? '0') ?? 0.0,  // Default 0.0 if parsing fails
-      email: json['email']?.toString() ?? '',  // Default empty string if missing
+      id: int.parse(json['id']?.toString() ?? '0'),
+      cardNumber: json['card_number']?.toString() ?? '',
+      pin: json['pin']?.toString() ?? '',
+      currentBalance: double.tryParse(json['current_balance']?.toString() ?? '0') ?? 0.0,
+      savingsBalance: double.tryParse(json['savings_balance']?.toString() ?? '0') ?? 0.0,
+      email: json['email']?.toString() ?? '',
+      name: json['name']?.toString() ?? '', // ✅ Safely parse 'name'
     );
   }
 
-  // Method to convert User object to JSON
+  // Convert User object to JSON
   Map<String, dynamic> toJson() => {
     'id': id,
     'card_number': cardNumber,
@@ -36,9 +39,10 @@ class User {
     'current_balance': currentBalance,
     'savings_balance': savingsBalance,
     'email': email,
+    'name': name, // ✅ Add this
   };
 
-  // Method to create a new User object with some fields updated (copy)
+  // copyWith method for updating fields
   User copyWith({
     int? id,
     String? cardNumber,
@@ -46,14 +50,16 @@ class User {
     double? currentBalance,
     double? savingsBalance,
     String? email,
+    String? name, // ✅ Add this
   }) {
     return User(
-      id: id ?? this.id,  // Use current value if not provided
+      id: id ?? this.id,
       cardNumber: cardNumber ?? this.cardNumber,
       pin: pin ?? this.pin,
       currentBalance: currentBalance ?? this.currentBalance,
       savingsBalance: savingsBalance ?? this.savingsBalance,
       email: email ?? this.email,
+      name: name ?? this.name, // ✅ Add this
     );
   }
 }

@@ -60,9 +60,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _fetchBalance() async {
     try {
-      final response = await http.get(Uri.parse(
-        'https://warehousemanagementsystem.shop/api/get_balance.php?card_number=${_user.cardNumber}',
-      ));
+      final response = await http.post(
+        Uri.parse('https://warehousemanagementsystem.shop/api/get_balances.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'card_number': _user.cardNumber}),
+      );
+
       final data = jsonDecode(response.body);
 
       if (data['success']) {
@@ -70,8 +73,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _user = _user.copyWith(
             currentBalance: double.parse(data['balance']['current_balance'].toString()),
             savingsBalance: double.parse(data['balance']['savings_balance'].toString()),
+            name: data['balance']['name'] ?? _user.name,
           );
         });
+      } else {
+        print('Balance fetch error: ${data['message']}');
       }
     } catch (e) {
       print('Failed to fetch balance: $e');
@@ -340,7 +346,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Account Number Card
+        // 👤 User Name
+        Container(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            _user.name,
+            style: const TextStyle(
+              color: CupertinoColors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+        // 📄 Account Number
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -369,11 +388,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
+
         const SizedBox(height: 16),
-        // Balances Row
+
+        // 💰 Balance Row
         Row(
           children: [
-            // Current Balance Card
+            // Current Balance
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(12),
@@ -405,7 +426,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            // Savings Balance Card
+
+            // Savings Balance
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(12),
@@ -441,6 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
+
 
   Widget _buildTransactionItem(Transaction transaction) {
     return Padding(
