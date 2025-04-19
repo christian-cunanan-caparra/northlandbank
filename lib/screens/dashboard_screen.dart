@@ -8,6 +8,7 @@ import '../models/user.dart';
 import '../models/transaction.dart';
 import 'transfer_screen.dart';
 import 'change_pin_screen.dart';
+import 'setting_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -331,7 +332,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           case 3:
             return CupertinoTabView(
-              builder: (context) => ChangePinScreen(user: _user),
+              builder: (context) => SettingsScreen(user: _user),
             );
           default:
             return CupertinoTabView(
