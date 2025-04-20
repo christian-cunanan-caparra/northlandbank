@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/user.dart';
 import 'dashboard_screen.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,6 +29,17 @@ class _LoginScreenState extends State<LoginScreen> {
     if (cardNumber.isEmpty || pin.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
       _showAlert('Error', 'Please enter both card number and PIN');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Check internet connection first
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _showAlert('Error', 'No internet connection');
       setState(() {
         _isLoading = false;
       });
@@ -60,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       await Future.delayed(const Duration(milliseconds: 300));
-      _showAlert('Error', 'Failed to connect to server: $e');
+      _showAlert('Error', 'Failed to connect to server. Please try again.');
     } finally {
       setState(() {
         _isLoading = false;
