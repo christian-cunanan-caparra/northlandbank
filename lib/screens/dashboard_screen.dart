@@ -598,7 +598,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${transaction.amount >= 0 ? '+' : '-'}₱${transaction.amount.abs().toStringAsFixed(2)}',
+                    '${transaction.amount >= 0 ? '' : ''}₱${transaction.amount.abs().toStringAsFixed(2)}',
                     style: TextStyle(
                       color: transaction.amount >= 0 ? _bpiDarkBlue : _bpiRed,
                       fontWeight: FontWeight.normal,
