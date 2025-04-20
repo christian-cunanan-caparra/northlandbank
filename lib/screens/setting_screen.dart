@@ -291,6 +291,7 @@ class SettingsScreen extends StatelessWidget {
             _buildSettingItem(
               icon: CupertinoIcons.lock_fill,
               title: 'Change PIN',
+              subtitle: 'Update your PIN',
               iconColor: CupertinoColors.systemGreen,
               onTap: () {
                 Navigator.push(
@@ -306,6 +307,7 @@ class SettingsScreen extends StatelessWidget {
             _buildSettingItem(
               icon: CupertinoIcons.doc_text_fill,
               title: 'Terms & Conditions',
+              subtitle: 'View project disclaimers and legal info',
               iconColor: CupertinoColors.systemGrey2,
               onTap: () => _showTermsAndConditions(context),
             ),

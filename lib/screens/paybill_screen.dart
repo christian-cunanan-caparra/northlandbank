@@ -109,6 +109,7 @@ class _PayBillScreenState extends State<PayBillScreen> {
                         ? CupertinoIcons.checkmark_alt_circle_fill
                         : CupertinoIcons.exclamationmark_circle_fill,
                     color: color,
+                    size: 28,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -133,13 +134,13 @@ class _PayBillScreenState extends State<PayBillScreen> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.xmark, size: 18),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () {
                       _notificationOverlay?.remove();
                       _notificationOverlay = null;
                     },
-                    padding: EdgeInsets.zero,
+                    child: const Icon(CupertinoIcons.xmark, size: 18),
                   ),
                 ],
               ),
@@ -159,7 +160,24 @@ class _PayBillScreenState extends State<PayBillScreen> {
   }
 
   void _showHelp() {
-    _showNotification('Help', 'Select bill type, enter amount and account to pay from');
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Help'),
+        message: const Text(
+          '1. Select the type of bill you want to pay\n'
+              '2. Enter the payment amount\n'
+              '3. Choose the account to pay from\n'
+              '4. Tap "Pay Bill" to complete the transaction',
+        ),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -183,50 +201,157 @@ class _PayBillScreenState extends State<PayBillScreen> {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CupertinoSlidingSegmentedControl<String>(
-                groupValue: _selectedBillType,
-                children: const {
-                  'water': Text('Water Bill'),
-                  'electric': Text('Electric Bill'),
-                },
-                onValueChanged: (value) {
-                  setState(() {
-                    _selectedBillType = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-              CupertinoTextField(
-                controller: _amountController,
-                placeholder: 'Amount',
-                keyboardType: TextInputType.number,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: CupertinoColors.systemGrey),
-                  borderRadius: BorderRadius.circular(8),
+              // Header with icon
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: const Icon(
+                    CupertinoIcons.money_dollar_circle_fill,
+                    size: 60,
+                    color: CupertinoColors.destructiveRed,
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
-              CupertinoSlidingSegmentedControl<String>(
-                groupValue: _selectedAccount,
-                children: const {
-                  'Current': Text('Current Account'),
-                  'Savings': Text('Savings Account'),
-                },
-                onValueChanged: (value) {
-                  setState(() {
-                    _selectedAccount = value!;
-                  });
-                },
+
+              // Bill type selection
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'SELECT BILL TYPE',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
               ),
-              const SizedBox(height: 32),
-              CupertinoButton.filled(
-                onPressed: _isLoading ? null : _payBill,
-                child: _isLoading
-                    ? const CupertinoActivityIndicator()
-                    : const Text('Pay Bill'),
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoSlidingSegmentedControl<String>(
+                  groupValue: _selectedBillType,
+                  children: const {
+                    'water': Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      child: Text('Water Bill'),
+                    ),
+                    'electric': Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      child: Text('Electric Bill'),
+                    ),
+                  },
+                  onValueChanged: (value) {
+                    setState(() {
+                      _selectedBillType = value!;
+                    });
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Amount input
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'PAYMENT AMOUNT',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
+              ),
+              CupertinoTextField(
+                controller: _amountController,
+                placeholder: 'Enter amount',
+                prefix: const Padding(
+                  padding: EdgeInsets.only(left: 16),
+                  child: Text('\₱'),
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.extraLightBackgroundGray,
+                  border: Border.all(color: CupertinoColors.systemGrey4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Account selection
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'SELECT ACCOUNT',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoSlidingSegmentedControl<String>(
+                  groupValue: _selectedAccount,
+                  children: const {
+                    'Current': Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      child: Text('Current'),
+                    ),
+                    'Savings': Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      child: Text('Savings'),
+                    ),
+                  },
+                  onValueChanged: (value) {
+                    setState(() {
+                      _selectedAccount = value!;
+                    });
+                  },
+                ),
+              ),
+
+              const Spacer(),
+
+              // Pay button
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoButton(
+                  borderRadius: BorderRadius.circular(10),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  color: CupertinoColors.systemRed, // this works with CupertinoButton, not .filled
+                  disabledColor: CupertinoColors.systemRed.withOpacity(0.5),
+                  onPressed: _isLoading ? null : _payBill,
+                  child: _isLoading
+                      ? const CupertinoActivityIndicator()
+                      : const Text(
+                    'Pay Bill',
+                    style: TextStyle(
+                      fontSize: 17,
+                      color: CupertinoColors.white,
+                    ),
+                  ),
+                ),
+              ),
+
+
+              // Footer note
+              Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 8),
+                child: Center(
+                  child: Text(
+                    'Payments are processed instantly',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CupertinoColors.systemGrey,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
