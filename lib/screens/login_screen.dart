@@ -17,18 +17,38 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _pinController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePin = true;
+  final FocusNode _cardNumberFocus = FocusNode();
+  final FocusNode _pinFocus = FocusNode();
 
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
     });
 
-    final cardNumber = _cardNumberController.text.trim();
+    final cardNumber = _cardNumberController.text.trim().replaceAll(' ', '');
     final pin = _pinController.text.trim();
 
     if (cardNumber.isEmpty || pin.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
       _showAlert('Error', 'Please enter both card number and PIN');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    if (cardNumber.length != 16) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _showAlert('Error', 'Card number must be 16 digits');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    if (pin.length != 6) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _showAlert('Error', 'PIN must be 6 digits');
       setState(() {
         _isLoading = false;
       });
@@ -96,119 +116,245 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _formatCardNumber() {
+    final text = _cardNumberController.text.replaceAll(' ', '');
+    if (text.length > 16) {
+      _cardNumberController.text = text.substring(0, 16);
+      _cardNumberController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _cardNumberController.text.length),
+      );
+      return;
+    }
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      buffer.write(text[i]);
+      if ((i + 1) % 4 == 0 && i != text.length - 1) {
+        buffer.write(' ');
+      }
+    }
+    final formattedText = buffer.toString();
+
+    if (_cardNumberController.text != formattedText) {
+      _cardNumberController.text = formattedText;
+      _cardNumberController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _cardNumberController.text.length),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cardNumberController.addListener(_formatCardNumber);
+  }
+
+  @override
+  void dispose() {
+    _cardNumberController.removeListener(_formatCardNumber);
+    _cardNumberController.dispose();
+    _pinController.dispose();
+    _cardNumberFocus.dispose();
+    _pinFocus.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.white,
+      backgroundColor: CupertinoColors.extraLightBackgroundGray,
       child: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 28.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 50),
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                const SizedBox(height: 60),
 
-                // Logo
-                Image.asset(
-                  'images/bpi.png',
-                  height: 100,
+            // Logo
+            Image.asset(
+              'images/bpi.png',
+              height: 120,
+            ),
+
+            const SizedBox(height: 30),
+
+            // Welcome Text
+            const Text(
+              'Welcome to BPI',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: CupertinoColors.systemRed,
+              ),
+            ),
+
+            const SizedBox(height: 50),
+
+            // Card Number Field
+            Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+              BoxShadow(
+              color: CupertinoColors.systemGrey.withOpacity(0.1),
+              blurRadius: 8,
+              spreadRadius: 1,
+              offset: const Offset(0, 2),
+              )],
+            ),
+            child: CupertinoTextField(
+              controller: _cardNumberController,
+              focusNode: _cardNumberFocus,
+              placeholder: 'Card Number (XXXX XXXX XXXX XXXX)',
+              placeholderStyle: TextStyle(
+                color: CupertinoColors.systemGrey,
+              ),
+              keyboardType: TextInputType.number,
+              maxLength: 19,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: CupertinoColors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _cardNumberFocus.hasFocus
+                      ? CupertinoColors.systemRed
+                      : CupertinoColors.systemGrey5,
+                  width: 1.5,
                 ),
-
-                const SizedBox(height: 20),
-
-                // Welcome Text
-                const Text(
-                  'Welcome to BPI',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: CupertinoColors.systemRed,
-                  ),
+              ),
+              prefix: const Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: Icon(
+                  CupertinoIcons.creditcard_fill,
+                  color: CupertinoColors.systemGrey,
+                  size: 20,
                 ),
+              ),
+              style: const TextStyle(
+                color: CupertinoColors.black,
+                fontSize: 16,
+              ),
+              onSubmitted: (_) {
+                FocusScope.of(context).requestFocus(_pinFocus);
+              },
+            ),
+          ),
 
-                const SizedBox(height: 50),
+          const SizedBox(height: 20),
 
-                // Card Number Field
-                CupertinoTextField(
-                  controller: _cardNumberController,
-                  placeholder: 'Card Number',
-                  keyboardType: TextInputType.number,
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  style: const TextStyle(color: CupertinoColors.black),
-                ),
+          // PIN Field
+          Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+            BoxShadow(
+            color: CupertinoColors.systemGrey.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 1,
+            offset: const Offset(0, 2),
+            )],
+          ),
+          child: CupertinoTextField(
+            controller: _pinController,
+            focusNode: _pinFocus,
+            placeholder: 'PIN (6 digits)',
+            placeholderStyle: TextStyle(
+              color: CupertinoColors.systemGrey,
+            ),
+            obscureText: _obscurePin,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            decoration: BoxDecoration(
+              color: CupertinoColors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _pinFocus.hasFocus
+                    ? CupertinoColors.systemRed
+                    : CupertinoColors.systemGrey5,
+                width: 1.5,
+              ),
+            ),
+            prefix: const Padding(
+              padding: EdgeInsets.only(left: 12),
+              child: Icon(
+                CupertinoIcons.lock_fill,
+                color: CupertinoColors.systemGrey,
+                size: 20,
+              ),
+            ),
+            suffix: CupertinoButton(
+              padding: EdgeInsets.zero,
+              child: Icon(
+                _obscurePin ? CupertinoIcons.eye : CupertinoIcons.eye_slash,
+                color: CupertinoColors.systemGrey,
+                size: 20,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePin = !_obscurePin;
+                });
+              },
+            ),
+            style: const TextStyle(
+              color: CupertinoColors.black,
+              fontSize: 16,
+            ),
+            onSubmitted: (_) => _login(),
+          ),
+        ),
 
-                const SizedBox(height: 20),
+        const SizedBox(height: 10),
 
-                // PIN Field
-                CupertinoTextField(
-                  controller: _pinController,
-                  placeholder: 'PIN',
-                  obscureText: _obscurePin,
-                  keyboardType: TextInputType.number,
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  suffix: CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: Icon(
-                      _obscurePin ? CupertinoIcons.eye : CupertinoIcons.eye_slash,
-                      color: CupertinoColors.systemGrey,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePin = !_obscurePin;
-                      });
-                    },
-                  ),
-                  style: const TextStyle(color: CupertinoColors.black),
-                ),
+        // Forgot PIN button (centered)
+        Center(
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            child: Text(
+              'Forgot your PIN?',
+              style: TextStyle(
+                color: CupertinoColors.systemRed,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            onPressed: () {
+              // Handle forgot PIN
+            },
+          ),
+        ),
 
-                const SizedBox(height: 40),
+        const SizedBox(height: 40),
 
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  child: CupertinoButton.filled(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    borderRadius: BorderRadius.circular(30),
-                    onPressed: _isLoading ? null : _login,
-                    child: _isLoading
-                        ? const CupertinoActivityIndicator(color: CupertinoColors.black)
-                        : const Text(
-                      'Log in',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Optional: Forgot PIN
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  child: const Text(
-                    'Forgot your PIN?',
-                    style: TextStyle(
-                      color: CupertinoColors.systemRed,
-                      fontSize: 14,
-                    ),
-                  ),
-                  onPressed: () {
-                    // Handle forgot PIN
-                  },
-                ),
-              ],
+        // Login Button (red)
+        SizedBox(
+          width: double.infinity,
+          child: CupertinoButton(
+            color: CupertinoColors.systemRed,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            borderRadius: BorderRadius.circular(30),
+            disabledColor: CupertinoColors.systemRed.withOpacity(0.5),
+            onPressed: _isLoading ? null : _login,
+            child: _isLoading
+                ? const CupertinoActivityIndicator(color: CupertinoColors.white)
+                : const Text(
+              'Log in',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: CupertinoColors.white,
+              ),
             ),
           ),
         ),
+        ],
       ),
+    ),
+    ),
+    ),
     );
   }
 }
