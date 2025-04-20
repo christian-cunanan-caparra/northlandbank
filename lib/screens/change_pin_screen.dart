@@ -90,16 +90,28 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
         }),
       ).timeout(const Duration(seconds: 15));
 
-      final data = _parseResponse(response);
+      final data = jsonDecode(response.body);
 
-      if (data['success'] == true) {
-        setState(() => _otpVerified = true);
-        _showAlert('Success', 'OTP verified successfully');
+      // Handle different status codes
+      if (response.statusCode == 200) {
+        if (data['success'] == true) {
+          setState(() => _otpVerified = true);
+          _showAlert('Success', 'OTP verified successfully');
+        } else {
+          _showAlert('Error', data['message'] ?? 'OTP verification failed');
+        }
+      } else if (response.statusCode == 500) {
+        // Handle server errors specifically
+        _showAlert('Error', data['message'] ?? 'Invalid or expired OTP');
       } else {
-        throw Exception(data['message'] ?? 'Invalid OTP');
+        throw Exception('Unexpected response: ${response.statusCode}');
       }
+    } on TimeoutException {
+      _showAlert('Error', 'Request timed out. Please try again.');
+    } on http.ClientException catch (e) {
+      _showAlert('Error', 'Network error: ${e.message}');
     } catch (e) {
-      _handleError(e);
+      _showAlert('Error', 'An unexpected error occurred: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
