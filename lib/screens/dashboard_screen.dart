@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mybanking/screens/paybill_screen.dart';
 import '../models/user.dart';
 import '../models/transaction.dart';
 import 'transfer_screen.dart';
 import 'change_pin_screen.dart';
 import 'setting_screen.dart';
+import 'login_screen.dart'; // Import the login screen
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -26,6 +28,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoadingCard = false;
   int _currentIndex = 0;
   late Timer _refreshTimer;
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  bool _hasInternetConnection = true;
 
   // BPI Color Scheme
   final Color _bpiRed = const Color(0xFFED1C24);
@@ -38,17 +42,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _user = widget.user;
     _startAutoRefresh();
+    _initConnectivityListener();
   }
 
   @override
   void dispose() {
     _refreshTimer.cancel();
+    _connectivitySubscription.cancel();
     super.dispose();
   }
 
+  void _initConnectivityListener() {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+      if (result == ConnectivityResult.none) {
+        setState(() {
+          _hasInternetConnection = false;
+        });
+        _handleNoInternetConnection();
+      } else {
+        setState(() {
+          _hasInternetConnection = true;
+        });
+      }
+    });
+  }
+
+  void _handleNoInternetConnection() {
+    // Show alert and logout
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Connection Lost'),
+        content: const Text('No internet connection. You will be logged out.'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.pop(context);
+              _logoutDueToNoInternet();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _logoutDueToNoInternet() {
+    // Navigate back to login screen
+    Navigator.pushAndRemoveUntil(
+      context,
+      CupertinoPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+    );
+  }
+
   void _startAutoRefresh() {
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       if (_isCardExpanded) {
+        // Check connectivity before attempting refresh
+        final connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult == ConnectivityResult.none) {
+          _handleNoInternetConnection();
+          return;
+        }
         _fetchData();
       }
     });
@@ -62,6 +119,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ]);
     } catch (e) {
       debugPrint('Auto-refresh error: $e');
+      // Check if error is due to no internet
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup')) {
+        _handleNoInternetConnection();
+      }
     }
   }
 
@@ -71,7 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Uri.parse('https://warehousemanagementsystem.shop/api/get_balances.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'card_number': _user.cardNumber}),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
 
@@ -88,6 +150,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       debugPrint('Failed to fetch balance: $e');
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup')) {
+        _handleNoInternetConnection();
+      }
     }
   }
 
@@ -95,7 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final response = await http.get(
         Uri.parse('https://warehousemanagementsystem.shop/api/transactions.php?card_number=${_user.cardNumber}&limit=3'),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
 
@@ -110,6 +176,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       debugPrint('Failed to fetch transactions: $e');
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup')) {
+        _handleNoInternetConnection();
+      }
     }
   }
 
