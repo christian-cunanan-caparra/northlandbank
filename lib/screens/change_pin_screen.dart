@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
 
@@ -92,7 +93,6 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
 
       final data = jsonDecode(response.body);
 
-      // Handle different status codes
       if (response.statusCode == 200) {
         if (data['success'] == true) {
           setState(() => _otpVerified = true);
@@ -101,7 +101,6 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
           _showAlert('Error', data['message'] ?? 'OTP verification failed');
         }
       } else if (response.statusCode == 500) {
-        // Handle server errors specifically
         _showAlert('Error', data['message'] ?? 'Invalid or expired OTP');
       } else {
         throw Exception('Unexpected response: ${response.statusCode}');
@@ -259,14 +258,30 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
             children: [
               if (_errorMessage != null)
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: CupertinoColors.systemRed.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: CupertinoColors.systemRed.withOpacity(0.3),
+                    ),
                   ),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: CupertinoColors.systemRed),
+                  child: Row(
+                    children: [
+                      const Icon(CupertinoIcons.exclamationmark_circle_fill,
+                          color: CupertinoColors.systemRed, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: CupertinoColors.systemRed,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               _buildOtpSection(),
@@ -283,16 +298,45 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
       return Column(
         children: [
           const SizedBox(height: 20),
-          const Text('We will send an OTP to your registered email:'),
-          const SizedBox(height: 8),
-          Text(
-            widget.user.email,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          CupertinoButton.filled(
-            onPressed: _isLoading ? null : _sendOtp,
-            child: _isLoading ? const CupertinoActivityIndicator() : const Text('Send OTP'),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: CupertinoColors.extraLightBackgroundGray,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                const Icon(CupertinoIcons.mail_solid, size: 48, color: CupertinoColors.activeBlue),
+                const SizedBox(height: 16),
+                const Text(
+                  'We will send a verification code to your registered email address',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.user.email,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: CupertinoColors.activeBlue,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                CupertinoButton.filled(
+                  borderRadius: BorderRadius.circular(8),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  onPressed: _isLoading ? null : _sendOtp,
+                  child: _isLoading
+                      ? const CupertinoActivityIndicator()
+                      : const Text(
+                    'Send Verification Code',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       );
@@ -300,41 +344,79 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
 
     if (!_otpVerified) {
       return Column(
-        children: [
+          children: [
           const SizedBox(height: 20),
-          const Text('Enter the 6-digit OTP sent to:'),
-          const SizedBox(height: 4),
-          Text(
-            widget.user.email,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          CupertinoTextField(
-            controller: _otpController,
-            placeholder: 'Enter OTP',
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: CupertinoColors.systemGrey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          const SizedBox(height: 16),
-          CupertinoButton.filled(
-            onPressed: _isLoading ? null : _verifyOtp,
-            child: _isLoading ? const CupertinoActivityIndicator() : const Text('Verify OTP'),
-          ),
-          const SizedBox(height: 16),
-          if (_resendTimer > 0)
-            Text('Resend OTP in $_resendTimer seconds')
-          else
-            CupertinoButton(
-              onPressed: _sendOtp,
-              child: const Text('Resend OTP'),
-            ),
-        ],
-      );
+    Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+    color: CupertinoColors.extraLightBackgroundGray,
+    borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+    children: [
+    const Icon(CupertinoIcons.lock_fill, size: 48, color: CupertinoColors.activeGreen),
+    const SizedBox(height: 16),
+    const Text(
+    'Enter the 6-digit verification code sent to:',
+    textAlign: TextAlign.center,
+    style: TextStyle(fontSize: 16),
+    ),
+    const SizedBox(height: 8),
+    Text(
+    widget.user.email,
+    textAlign: TextAlign.center,
+    style: const TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 16,
+    color: CupertinoColors.activeBlue,
+    ),
+    ),
+    const SizedBox(height: 24),
+    CupertinoTextField(
+    controller: _otpController,
+    placeholder: 'Enter 6-digit code',
+    keyboardType: TextInputType.number,
+    maxLength: 6,
+    padding: const EdgeInsets.all(16),
+    textAlign: TextAlign.center,
+    style: const TextStyle(fontSize: 24, letterSpacing: 4),
+    decoration: BoxDecoration(
+    color: CupertinoColors.white,
+    border: Border.all(color: CupertinoColors.systemGrey),
+    borderRadius: BorderRadius.circular(8),
+    ),
+    ),
+    const SizedBox(height: 16),
+    CupertinoButton.filled(
+    borderRadius: BorderRadius.circular(8),
+    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+    onPressed: _isLoading ? null : _verifyOtp,
+    child: _isLoading
+    ? const CupertinoActivityIndicator()
+        : const Text(
+    'Verify Code',
+    style: TextStyle(fontSize: 16),
+    ),
+    ),
+    const SizedBox(height: 16),
+    if (_resendTimer > 0)
+    Text(
+    'You can resend code in $_resendTimer seconds',
+    style: const TextStyle(color: CupertinoColors.systemGrey),
+    )
+    else
+    CupertinoButton(
+    padding: EdgeInsets.zero,
+    onPressed: _sendOtp,
+    child: const Text(
+    'Resend Verification Code',
+    style: TextStyle(color: CupertinoColors.activeBlue),
+    ),
+    )],
+    ),
+    ),
+    ],
+    );
     }
 
     return const SizedBox.shrink();
@@ -345,54 +427,176 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
       return Column(
         children: [
           const SizedBox(height: 20),
-          const Text('Current PIN'),
-          const SizedBox(height: 8),
-          CupertinoTextField(
-            controller: _currentPinController,
-            placeholder: 'Enter current PIN',
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            obscureText: true,
-            padding: const EdgeInsets.all(16),
+          Container(
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              border: Border.all(color: CupertinoColors.systemGrey),
-              borderRadius: BorderRadius.circular(8),
+              color: CupertinoColors.extraLightBackgroundGray,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: CupertinoColors.systemGrey.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text('New PIN'),
-          const SizedBox(height: 8),
-          CupertinoTextField(
-            controller: _newPinController,
-            placeholder: 'Enter new PIN (6 digits)',
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            obscureText: true,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: CupertinoColors.systemGrey),
-              borderRadius: BorderRadius.circular(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(
+                  CupertinoIcons.lock_rotation,
+                  size: 48,
+                  color: CupertinoColors.activeBlue,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Change Your PIN',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8.0, bottom: 4),
+                        child: Text(
+                          'Current PIN',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: CupertinoColors.secondaryLabel,
+                          ),
+                        ),
+                      ),
+                      CupertinoTextField(
+                        controller: _currentPinController,
+                        placeholder: 'Enter current PIN',
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
+                        obscureText: true,
+                        padding: const EdgeInsets.all(16),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          letterSpacing: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.white,
+                          border: Border.all(
+                            color: CupertinoColors.systemGrey,
+                            width: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8.0, bottom: 4),
+                        child: Text(
+                          'New PIN',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: CupertinoColors.secondaryLabel,
+                          ),
+                        ),
+                      ),
+                      CupertinoTextField(
+                        controller: _newPinController,
+                        placeholder: 'Enter new PIN (6 digits)',
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
+                        obscureText: true,
+                        padding: const EdgeInsets.all(16),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          letterSpacing: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.white,
+                          border: Border.all(
+                            color: CupertinoColors.systemGrey,
+                            width: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8.0, bottom: 4),
+                        child: Text(
+                          'Confirm New PIN',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: CupertinoColors.secondaryLabel,
+                          ),
+                        ),
+                      ),
+                      CupertinoTextField(
+                        controller: _confirmPinController,
+                        placeholder: 'Confirm new PIN',
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
+                        obscureText: true,
+                        padding: const EdgeInsets.all(16),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          letterSpacing: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.white,
+                          border: Border.all(
+                            color: CupertinoColors.systemGrey,
+                            width: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: CupertinoButton.filled(
+                    borderRadius: BorderRadius.circular(10),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    onPressed: _isLoading ? null : _changePin,
+                    child: _isLoading
+                        ? const CupertinoActivityIndicator()
+                        : const Text(
+                      'Update PIN',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text('Confirm New PIN'),
-          const SizedBox(height: 8),
-          CupertinoTextField(
-            controller: _confirmPinController,
-            placeholder: 'Confirm new PIN',
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            obscureText: true,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: CupertinoColors.systemGrey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          const SizedBox(height: 32),
-          CupertinoButton.filled(
-            onPressed: _isLoading ? null : _changePin,
-            child: _isLoading ? const CupertinoActivityIndicator() : const Text('Change PIN'),
           ),
         ],
       );
